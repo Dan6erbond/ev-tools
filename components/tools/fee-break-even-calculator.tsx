@@ -22,7 +22,22 @@ import {
   Car,
   Sparkles,
   Scale,
+  LineChart as LineChartIcon,
 } from "lucide-react";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartConfig,
+} from "@/components/ui/chart";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ReferenceLine,
+} from "recharts";
 
 const feeQueryParsers = {
   priceA: parseAsString.withDefault("0.44"),
@@ -198,6 +213,62 @@ export function FeeBreakEvenCalculator() {
     milestoneVolumes.sort((a, b) => a - b);
   }
 
+  // Generate 100 data points (1% to 100% SoC) for effective price reduction chart
+  const chartData = React.useMemo(() => {
+    const rawKwhs = new Set<number>();
+    
+    // 100 points for 1%..100% battery SoC
+    for (let i = 1; i <= 100; i++) {
+      const kwh = (i / 100) * batteryKwh;
+      rawKwhs.add(Math.round(kwh * 100) / 100);
+    }
+
+    // Target kWh point
+    if (activeChargeKwh > 0 && activeChargeKwh <= batteryKwh) {
+      rawKwhs.add(Math.round(activeChargeKwh * 100) / 100);
+    }
+
+    // Break-even kWh point
+    if (isFinite(breakEvenKwh) && breakEvenKwh > 0 && breakEvenKwh <= batteryKwh) {
+      rawKwhs.add(Math.round(breakEvenKwh * 100) / 100);
+    }
+
+    const sortedKwhs = Array.from(rawKwhs).sort((a, b) => a - b);
+
+    return sortedKwhs.map((q) => {
+      const soc = Math.min(100, Math.max(0, (q / batteryKwh) * 100));
+      const cA = fA + q * pA;
+      const cB = fB + q * pB;
+      const effA = q > 0 ? cA / q : pA;
+      const effB = q > 0 ? cB / q : pB;
+
+      return {
+        socPct: Math.round(soc * 10) / 10,
+        kwh: Math.round(q * 10) / 10,
+        effectiveRateA: Math.round(effA * 1000) / 1000,
+        effectiveRateB: Math.round(effB * 1000) / 1000,
+        costA: Math.round(cA * 100) / 100,
+        costB: Math.round(cB * 100) / 100,
+      };
+    });
+  }, [batteryKwh, activeChargeKwh, breakEvenKwh, fA, pA, fB, pB]);
+
+  const targetSocPct = Math.round(((activeChargeKwh / batteryKwh) * 100) * 10) / 10;
+  const breakEvenSocPctLine = isFinite(breakEvenKwh) && breakEvenKwh > 0
+    ? Math.round(((breakEvenKwh / batteryKwh) * 100) * 10) / 10
+    : null;
+
+  const chartConfig = {
+    effectiveRateA: {
+      label: labelA || "Station A",
+      color: "#3b82f6",
+    },
+    effectiveRateB: {
+      label: labelB || "Station B",
+      color: "#10b981",
+    },
+  } satisfies ChartConfig;
+
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto">
       {/* Active Vehicle Banner */}
@@ -357,6 +428,156 @@ export function FeeBreakEvenCalculator() {
                 </>
               )}
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Effective Price per kWh Curve Chart */}
+      <Card className="border shadow-xs">
+        <CardHeader className="pb-3 border-b bg-muted/10">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <LineChartIcon className="size-4 text-emerald-500" />
+                Effective Price per kWh Curve (0% → 100%)
+              </CardTitle>
+              <CardDescription className="text-xs">
+                As energy accumulates, the fixed activation fee gets spread over more kWh, lowering your effective rate per kWh.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-4 text-xs font-medium">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full bg-blue-500 inline-block" />
+                <span>{labelA || "Station A"}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full bg-emerald-500 inline-block" />
+                <span>{labelB || "Station B"}</span>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6">
+          <ChartContainer config={chartConfig} className="h-[280px] sm:h-[340px] w-full">
+            <LineChart
+              data={chartData}
+              margin={{ top: 25, right: 25, left: 10, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted/40" />
+              <XAxis
+                dataKey="socPct"
+                unit="%"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                className="text-[11px] text-muted-foreground"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                domain={['auto', 'auto']}
+                tickFormatter={(val) => formatCurrency(val, settings.currency)}
+                className="text-[11px] font-mono text-muted-foreground"
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, name, item) => {
+                      const isA = name === "effectiveRateA";
+                      const stationName = isA ? (labelA || "Station A") : (labelB || "Station B");
+                      const totalCost = item.payload[isA ? "costA" : "costB"];
+                      return (
+                        <div className="flex flex-col gap-0.5 text-xs">
+                          <span className="font-semibold text-foreground">{stationName}</span>
+                          <div className="flex items-baseline gap-2 font-mono">
+                            <span className="font-bold">
+                              {formatCurrency(Number(value), settings.currency)}/kWh
+                            </span>
+                            <span className="text-[11px] text-muted-foreground">
+                              ({formatCurrency(totalCost, settings.currency)} total)
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                    labelFormatter={(label, payload) => {
+                      if (!payload?.[0]?.payload) return `${label}% Battery`;
+                      const p = payload[0].payload;
+                      return `${p.socPct}% Battery (${p.kwh} kWh)`;
+                    }}
+                  />
+                }
+              />
+
+              {/* Station A Line */}
+              <Line
+                type="monotone"
+                dataKey="effectiveRateA"
+                name="effectiveRateA"
+                stroke="#3b82f6"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 5, strokeWidth: 0 }}
+              />
+
+              {/* Station B Line */}
+              <Line
+                type="monotone"
+                dataKey="effectiveRateB"
+                name="effectiveRateB"
+                stroke="#10b981"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 5, strokeWidth: 0 }}
+              />
+
+              {/* Target Charge Volume Reference Line */}
+              {targetSocPct > 0 && targetSocPct <= 100 && (
+                <ReferenceLine
+                  x={targetSocPct}
+                  stroke="#10b981"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                  label={{
+                    value: `Target: ${activeChargeKwh.toFixed(1)} kWh (${targetSocPct.toFixed(0)}%)`,
+                    position: "top",
+                    fill: "var(--foreground, currentColor)",
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                />
+              )}
+
+              {/* Break-Even Point Reference Line */}
+              {breakEvenSocPctLine !== null && breakEvenSocPctLine > 0 && breakEvenSocPctLine <= 100 && (
+                <ReferenceLine
+                  x={breakEvenSocPctLine}
+                  stroke="#3b82f6"
+                  strokeWidth={1.5}
+                  strokeDasharray="3 3"
+                  label={{
+                    value: `Break-Even: ${breakEvenKwh.toFixed(1)} kWh (${breakEvenSocPctLine.toFixed(0)}%)`,
+                    position: "insideTopLeft",
+                    fill: "var(--foreground, currentColor)",
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                />
+              )}
+            </LineChart>
+          </ChartContainer>
+          <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground mt-4 pt-3 border-t gap-2">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block size-2.5 rounded-full border border-emerald-500 bg-emerald-500/20" />
+              Target Charge: <strong className="text-foreground font-mono">{activeChargeKwh.toFixed(1)} kWh</strong> (~{targetSocPct.toFixed(0)}% battery)
+            </span>
+            {isFinite(breakEvenKwh) && breakEvenKwh > 0 && breakEvenKwh <= batteryKwh && (
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block size-2.5 rounded-full border border-blue-500 bg-blue-500/20" />
+                Break-Even Point: <strong className="text-foreground font-mono">{breakEvenKwh.toFixed(1)} kWh</strong> (~{breakEvenSocPctLine?.toFixed(0)}% battery)
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
