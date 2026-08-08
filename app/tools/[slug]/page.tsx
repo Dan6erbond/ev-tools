@@ -25,13 +25,39 @@ interface ToolPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: ToolPageProps) {
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: ToolPageProps): Promise<Metadata> {
   const { slug } = await params;
   const tool = getToolBySlug(slug);
-  if (!tool || !tool.implemented) return {};
+  if (!tool || !tool.implemented) {
+    return {
+      title: "Tool Not Found",
+    };
+  }
   return {
-    title: `${tool.name} - EV Tools`,
+    title: tool.name,
     description: tool.description,
+    keywords: tool.keywords,
+    openGraph: {
+      title: `${tool.name} | EV Tools`,
+      description: tool.description,
+      type: "website",
+      images: [
+        {
+          url: "/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: `${tool.name} - EV Tools`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${tool.name} | EV Tools`,
+      description: tool.description,
+      images: ["/og-image.png"],
+    },
   };
 }
 
