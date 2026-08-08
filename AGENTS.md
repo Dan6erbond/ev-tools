@@ -18,3 +18,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 2. **Internationalization (i18n)**: When implementing i18n (e.g. `next-intl`), ensure all routes use static params (`generateStaticParams`) compatible with GitHub Pages export.
 3. **Dynamic Content / Future Features**: Future features like a blog or localized pages must explicitly define static paths for build-time generation.
 4. **Build Verification**: `pnpm build` automatically handles linting and type checking. Running `pnpm build` is sufficient for full verification; do not run separate `typecheck` or `lint` commands beforehand.
+
+## Agent Behavior & Decision-Making
+1. **User Confirmation First**: Ask for user confirmation and present options before making non-trivial architectural, structural, or configuration changes (e.g., removing module flags, modifying project configuration files, or refactoring setups). Do not make assumptions or change approaches without aligned approval.
+2. **Git Operations & Pushing**: Do not run `git push`, `git commit`, `git reset`, or modify git history without explicit permission from the user for that specific action.
+
