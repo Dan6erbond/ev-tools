@@ -1,6 +1,5 @@
-import type { NextConfig } from "next"
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   output: "export",
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
   images: {
@@ -9,5 +8,3 @@ const nextConfig: NextConfig = {
 }
 
 export default nextConfig
-
-
