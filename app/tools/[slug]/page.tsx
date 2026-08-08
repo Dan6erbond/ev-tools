@@ -1,8 +1,9 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getAllTools, getToolBySlug } from "@/lib/tools/registry";
 import { DetourCalculator } from "@/components/tools/detour-calculator";
 import { FeeBreakEvenCalculator } from "@/components/tools/fee-break-even-calculator";
+import { EVBreakEvenCalculator } from "@/components/tools/ev-break-even-calculator";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import { DynamicIcon, type IconName } from "lucide-react/dynamic";
@@ -100,6 +101,10 @@ export default async function ToolPage({ params }: ToolPageProps) {
           <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Loading calculator...</div>}>
             <FeeBreakEvenCalculator />
           </Suspense>
+        ) : slug === "ev-break-even-calculator" ? (
+          <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Loading calculator...</div>}>
+            <EVBreakEvenCalculator />
+          </Suspense>
         ) : (
           notFound()
         )}
@@ -107,3 +112,4 @@ export default async function ToolPage({ params }: ToolPageProps) {
     </div>
   );
 }
+

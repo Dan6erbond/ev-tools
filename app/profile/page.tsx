@@ -1,10 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useSettings } from "@/components/settings-context";
 import { CAR_PRESETS } from "@/lib/car-presets";
-import { CURRENCIES, EFFICIENCY_UNITS, formatCurrency, formatDistance, formatEfficiency, convertEfficiency } from "@/lib/units";
-import { DistanceUnit, EfficiencyUnit } from "@/lib/types";
+import {
+  CURRENCIES,
+  EFFICIENCY_UNITS,
+  GAS_EFFICIENCY_UNITS,
+  GAS_FUEL_PRICE_UNITS,
+  formatCurrency,
+  formatDistance,
+  formatEfficiency,
+  convertEfficiency,
+} from "@/lib/units";
+import { DistanceUnit, EfficiencyUnit, GasEfficiencyUnit, GasFuelPriceUnit } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -360,7 +369,7 @@ export default function ProfilePage() {
                 Configure local formatting rules using standard Intl currency codes and preferred units.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Currency */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="currency">Currency (Intl Formatting)</Label>
@@ -413,9 +422,9 @@ export default function ProfilePage() {
                 </Select>
               </div>
 
-              {/* Global Efficiency Unit */}
+              {/* EV Efficiency Unit */}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="globalEfficiencyUnit">Global Efficiency Unit</Label>
+                <Label htmlFor="globalEfficiencyUnit">EV Efficiency Unit</Label>
                 <Select
                   value={settings.efficiencyUnit}
                   onValueChange={(val: EfficiencyUnit | null) => {
@@ -431,6 +440,58 @@ export default function ProfilePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {EFFICIENCY_UNITS.map((u) => (
+                      <SelectItem key={u.unit} value={u.unit}>
+                        {u.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Gas Consumption Unit */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="gasEfficiencyUnit">Gas Consumption Unit</Label>
+                <Select
+                  value={settings.gasEfficiencyUnit || "l/100km"}
+                  onValueChange={(val: GasEfficiencyUnit | null) => {
+                    if (val) {
+                      updateUnits({ gasEfficiencyUnit: val });
+                      triggerNotify();
+                    }
+                  }}
+                  items={GAS_EFFICIENCY_UNITS.map((u) => ({ label: u.label, value: u.unit }))}
+                >
+                  <SelectTrigger id="gasEfficiencyUnit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GAS_EFFICIENCY_UNITS.map((u) => (
+                      <SelectItem key={u.unit} value={u.unit}>
+                        {u.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Gas Fuel Price Unit */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="gasFuelPriceUnit">Gas Fuel Price Unit</Label>
+                <Select
+                  value={settings.gasFuelPriceUnit || "Per Liter"}
+                  onValueChange={(val: GasFuelPriceUnit | null) => {
+                    if (val) {
+                      updateUnits({ gasFuelPriceUnit: val });
+                      triggerNotify();
+                    }
+                  }}
+                  items={GAS_FUEL_PRICE_UNITS.map((u) => ({ label: u.label, value: u.unit }))}
+                >
+                  <SelectTrigger id="gasFuelPriceUnit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GAS_FUEL_PRICE_UNITS.map((u) => (
                       <SelectItem key={u.unit} value={u.unit}>
                         {u.label}
                       </SelectItem>
@@ -470,7 +531,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-muted-foreground">Efficiency:</span>
+                <span className="text-muted-foreground">EV Efficiency:</span>
                 <span className="font-mono font-medium">
                   {activeVehicle
                     ? formatEfficiency(
@@ -485,7 +546,7 @@ export default function ProfilePage() {
                 <span className="text-xs font-semibold text-muted-foreground">Local Formatting Preview:</span>
                 <div className="bg-background rounded-lg p-3 border flex flex-col gap-2 font-mono text-xs">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cost:</span>
+                    <span className="text-muted-foreground">Currency:</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                       {formatCurrency(14.5, settings.currency)}
                     </span>
@@ -495,8 +556,16 @@ export default function ProfilePage() {
                     <span>{formatDistance(15, settings.distanceUnit)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Efficiency Unit:</span>
+                    <span className="text-muted-foreground">EV Unit:</span>
                     <span>{settings.efficiencyUnit}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Gas Unit:</span>
+                    <span>{settings.gasEfficiencyUnit || "l/100km"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fuel Price Unit:</span>
+                    <span>{settings.gasFuelPriceUnit || "Per Liter"}</span>
                   </div>
                 </div>
               </div>

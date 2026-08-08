@@ -20,6 +20,16 @@ export const TOOLS_REGISTRY: Tool[] = [
     featured: true,
   },
   {
+    id: "ev-break-even-calculator",
+    name: "EV Break-Even Calculator",
+    description: "Compare total cost of ownership, annual fuel/energy savings, and break-even timeline between a gas car and an electric vehicle.",
+    category: "Charging & Savings",
+    iconName: "scale",
+    keywords: ["break-even", "tco", "gas vs ev", "savings", "comparison", "purchase price", "roi", "total cost of ownership"],
+    featured: true,
+    implemented: true,
+  },
+  {
     id: "charging-time-estimator",
     name: "Charging Time & Curve Estimator",
     description: "Estimate charging duration from X% to Y% based on charger peak kW, battery capacity, and charging curve.",

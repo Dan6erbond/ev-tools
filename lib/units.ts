@@ -1,4 +1,4 @@
-import { CurrencyConfig, DistanceUnit, EfficiencyUnit } from "./types";
+import { CurrencyConfig, DistanceUnit, EfficiencyUnit, GasEfficiencyUnit, GasFuelPriceUnit } from "./types";
 
 export const CURRENCIES: CurrencyConfig[] = [
   { code: "EUR", symbol: "€", name: "Euro (EUR)" },
@@ -22,7 +22,22 @@ export const EFFICIENCY_UNITS: { unit: EfficiencyUnit; label: string; descriptio
   { unit: "Wh/mi", label: "Wh/mi", description: "Watt-hours per mile (e.g. 310)" },
 ];
 
+export const GAS_EFFICIENCY_UNITS: { unit: GasEfficiencyUnit; label: string }[] = [
+  { unit: "l/100km", label: "L/100km" },
+  { unit: "mpg (US)", label: "mpg (US)" },
+  { unit: "mpg (UK)", label: "mpg (UK)" },
+  { unit: "km/l", label: "km/L" },
+];
+
+export const GAS_FUEL_PRICE_UNITS: { unit: GasFuelPriceUnit; label: string }[] = [
+  { unit: "Per Liter", label: "Per Liter" },
+  { unit: "Per Gal (US)", label: "Per Gal (US)" },
+  { unit: "Per Gal (UK)", label: "Per Gal (UK)" },
+];
+
 const KM_PER_MILE = 1.609344;
+export const L_PER_GAL_US = 3.78541;
+export const L_PER_GAL_UK = 4.54609;
 
 /**
  * Format a number as currency using Intl.NumberFormat
@@ -62,6 +77,76 @@ export function distanceToKm(value: number, unit: DistanceUnit = "km"): number {
     return value * KM_PER_MILE;
   }
   return value;
+}
+
+/**
+ * Convert gas efficiency value to L/100km
+ */
+export function toL100km(value: number, unit: GasEfficiencyUnit): number {
+  if (value <= 0) return 0;
+  switch (unit) {
+    case "mpg (US)":
+      return 235.215 / value;
+    case "mpg (UK)":
+      return 282.481 / value;
+    case "km/l":
+      return 100 / value;
+    case "l/100km":
+      return value;
+    default:
+      return value;
+  }
+}
+
+/**
+ * Convert L/100km to target gas efficiency unit
+ */
+export function fromL100km(value: number, unit: GasEfficiencyUnit): number {
+  if (value <= 0) return 0;
+  switch (unit) {
+    case "mpg (US)":
+      return 235.215 / value;
+    case "mpg (UK)":
+      return 282.481 / value;
+    case "km/l":
+      return 100 / value;
+    case "l/100km":
+      return value;
+    default:
+      return value;
+  }
+}
+
+/**
+ * Convert fuel price value to Price per Liter
+ */
+export function toPricePerL(value: number, unit: GasFuelPriceUnit): number {
+  switch (unit) {
+    case "Per Gal (US)":
+      return value / L_PER_GAL_US;
+    case "Per Gal (UK)":
+      return value / L_PER_GAL_UK;
+    case "Per Liter":
+      return value;
+    default:
+      return value;
+  }
+}
+
+/**
+ * Convert Price per Liter to target fuel price unit
+ */
+export function fromPricePerL(value: number, unit: GasFuelPriceUnit): number {
+  switch (unit) {
+    case "Per Gal (US)":
+      return value * L_PER_GAL_US;
+    case "Per Gal (UK)":
+      return value * L_PER_GAL_UK;
+    case "Per Liter":
+      return value;
+    default:
+      return value;
+  }
 }
 
 /**

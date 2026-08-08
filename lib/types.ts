@@ -27,6 +27,10 @@ export type EfficiencyUnit =
   | "kWh/100mi"
   | "Wh/mi";
 
+export type GasEfficiencyUnit = "mpg (US)" | "mpg (UK)" | "l/100km" | "km/l";
+
+export type GasFuelPriceUnit = "Per Liter" | "Per Gal (US)" | "Per Gal (UK)";
+
 export interface CurrencyConfig {
   code: string;
   symbol: string;
@@ -57,5 +61,8 @@ export interface UserSettings {
   activeVehicleId: string;
   distanceUnit: DistanceUnit;
   efficiencyUnit: EfficiencyUnit;
+  gasEfficiencyUnit?: GasEfficiencyUnit;
+  gasFuelPriceUnit?: GasFuelPriceUnit;
   currency: string; // ISO Currency code e.g. 'CHF', 'EUR', 'USD', 'GBP'
 }
+

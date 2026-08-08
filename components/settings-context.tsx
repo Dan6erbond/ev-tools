@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { UserSettings, UserVehicle, DistanceUnit, EfficiencyUnit } from "@/lib/types";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { UserSettings, UserVehicle, DistanceUnit, EfficiencyUnit, GasEfficiencyUnit, GasFuelPriceUnit } from "@/lib/types";
 import { CAR_PRESETS } from "@/lib/car-presets";
 import { convertEfficiency } from "@/lib/units";
 
@@ -14,6 +14,8 @@ const defaultSettings: UserSettings = {
   activeVehicleId: "",
   distanceUnit: "km",
   efficiencyUnit: "kWh/100km",
+  gasEfficiencyUnit: "l/100km",
+  gasFuelPriceUnit: "Per Liter",
   currency: "EUR",
 };
 
@@ -25,14 +27,14 @@ interface SettingsContextType {
   addCustomVehicle: (vehicle: Omit<UserVehicle, "id">) => void;
   updateVehicle: (vehicleId: string, updates: Partial<Omit<UserVehicle, "id">>) => void;
   removeVehicle: (vehicleId: string) => void;
-  updateUnits: (units: Partial<Pick<UserSettings, "distanceUnit" | "efficiencyUnit" | "currency">>) => void;
+  updateUnits: (units: Partial<Pick<UserSettings, "distanceUnit" | "efficiencyUnit" | "gasEfficiencyUnit" | "gasFuelPriceUnit" | "currency">>) => void;
   resetToDefaults: () => void;
   isLoaded: boolean;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-export function SettingsProvider({ children }: { children: React.ReactNode }) {
+export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -61,6 +63,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           activeVehicleId,
           distanceUnit: parsed.distanceUnit || defaultSettings.distanceUnit,
           efficiencyUnit: parsed.efficiencyUnit || defaultSettings.efficiencyUnit,
+          gasEfficiencyUnit: parsed.gasEfficiencyUnit || defaultSettings.gasEfficiencyUnit,
+          gasFuelPriceUnit: parsed.gasFuelPriceUnit || defaultSettings.gasFuelPriceUnit,
           currency: parsed.currency || defaultSettings.currency,
         };
 
@@ -166,9 +170,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateUnits = (units: Partial<Pick<UserSettings, "distanceUnit" | "efficiencyUnit" | "currency">>) => {
+  const updateUnits = (units: Partial<Pick<UserSettings, "distanceUnit" | "efficiencyUnit" | "gasEfficiencyUnit" | "gasFuelPriceUnit" | "currency">>) => {
     saveSettings({ ...settings, ...units });
   };
+
 
   const resetToDefaults = () => {
     saveSettings(defaultSettings);
