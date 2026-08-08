@@ -36,10 +36,10 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md">
       {/* Left: Sidebar trigger + Breadcrumb / Title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         <SidebarTrigger />
         <Link href="/" className="flex items-center gap-2 font-semibold text-sm hover:opacity-80 transition-opacity">
-          <Zap className="size-4 text-emerald-500 fill-current" />
+          <Zap className="size-4 text-emerald-500 fill-current shrink-0" />
           <span>EV Tools</span>
         </Link>
       </div>
@@ -61,12 +61,12 @@ export function AppHeader() {
       </div>
 
       {/* Right: Active Vehicle Selector & Profile Link */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 xs:gap-2 min-w-0">
         {/* Mobile search button */}
         <Button
           variant="ghost"
           size="icon"
-          className="sm:hidden size-8"
+          className="sm:hidden size-8 shrink-0"
           onClick={() => setSearchOpen(true)}
           aria-label="Search tools"
         >
@@ -80,13 +80,13 @@ export function AppHeader() {
             value: v.id,
           }));
           return (
-            <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2.5 py-1 text-xs">
+            <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2 py-1 text-xs min-w-0 max-w-[130px] min-[380px]:max-w-[170px] sm:max-w-[260px] md:max-w-xs">
               <Car className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <Select value={activeVehicle?.id} onValueChange={(val) => val && setActiveVehicle(val)} items={vehicleItems}>
-                <SelectTrigger className="h-6 border-0 bg-transparent px-2 font-medium text-xs shadow-none focus:ring-0 gap-1.5">
-                  <SelectValue placeholder="Select Vehicle" />
+                <SelectTrigger className="h-6 border-0 bg-transparent px-1 font-medium text-xs shadow-none focus:ring-0 gap-1 min-w-0 flex-1 w-full overflow-hidden">
+                  <SelectValue placeholder="Select Vehicle" className="truncate min-w-0 block" />
                 </SelectTrigger>
-                <SelectContent align="end">
+                <SelectContent align="end" className="min-w-44 max-w-[calc(100vw-2rem)]">
                   {vehicleItems.map((item) => (
                     <SelectItem key={item.value} value={item.value} className="text-xs">
                       {item.label}
@@ -94,14 +94,14 @@ export function AppHeader() {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground font-mono">{currencyDisplay}</span>
+              <span className="text-muted-foreground shrink-0">•</span>
+              <span className="text-muted-foreground font-mono shrink-0">{currencyDisplay}</span>
             </div>
           );
         })()}
 
         {/* Profile Link */}
-        <Button variant="ghost" size="sm" render={<Link href="/profile" />} className="h-8 gap-1 text-xs">
+        <Button variant="ghost" size="sm" render={<Link href="/profile" />} className="h-8 gap-1 text-xs shrink-0 px-2 sm:px-3">
           <SlidersHorizontal className="size-3.5" />
           <span className="hidden lg:inline">Garage & Units</span>
         </Button>
