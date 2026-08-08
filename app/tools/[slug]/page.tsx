@@ -2,20 +2,15 @@ import React, { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getAllTools, getToolBySlug } from "@/lib/tools/registry";
 import { DetourCalculator } from "@/components/tools/detour-calculator";
+import { FeeBreakEvenCalculator } from "@/components/tools/fee-break-even-calculator";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Calculator, BatteryCharging, Route, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const ICON_MAP: Record<string, React.ElementType> = {
-  Zap,
-  Calculator,
-  BatteryCharging,
-  Route,
-};
-
 export async function generateStaticParams() {
-  const tools = getAllTools().filter((tool) => tool.implemented);
+  const tools = getAllTools().filter((tool) => tool.implemented !== false);
   return tools.map((tool) => ({
     slug: tool.id,
   }));
@@ -30,7 +25,7 @@ import type { Metadata } from "next";
 export async function generateMetadata({ params }: ToolPageProps): Promise<Metadata> {
   const { slug } = await params;
   const tool = getToolBySlug(slug);
-  if (!tool || !tool.implemented) {
+  if (!tool || tool.implemented === false) {
     return {
       title: "Tool Not Found",
     };
@@ -65,11 +60,9 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const { slug } = await params;
   const tool = getToolBySlug(slug);
 
-  if (!tool || !tool.implemented) {
+  if (!tool || tool.implemented === false) {
     notFound();
   }
-
-  const IconComponent = ICON_MAP[tool.iconName] || Zap;
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 flex flex-col gap-8">
@@ -88,7 +81,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
         <div className="flex items-center gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <IconComponent className="size-6" />
+            <DynamicIcon name={tool.iconName as IconName} className="size-6" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{tool.name}</h1>
@@ -102,6 +95,10 @@ export default async function ToolPage({ params }: ToolPageProps) {
         {slug === "detour-calculator" ? (
           <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Loading calculator...</div>}>
             <DetourCalculator />
+          </Suspense>
+        ) : slug === "fee-break-even-calculator" ? (
+          <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Loading calculator...</div>}>
+            <FeeBreakEvenCalculator />
           </Suspense>
         ) : (
           notFound()

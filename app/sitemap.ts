@@ -5,7 +5,7 @@ export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dan6erbond.github.io/ev-tools";
-  const tools = getAllTools().filter((t) => t.implemented);
+  const tools = getAllTools().filter((t) => t.implemented !== false);
 
   const toolEntries: MetadataRoute.Sitemap = tools.map((tool) => ({
     url: `${baseUrl}/tools/${tool.id}`,

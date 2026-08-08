@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { getAllTools } from "@/lib/tools/registry";
 import { ToolCategory } from "@/lib/types";
 import { useSettings } from "@/components/settings-context";
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 import {
   Sidebar,
   SidebarContent,
@@ -23,19 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   LayoutGrid,
   Zap,
-  Calculator,
-  BatteryCharging,
-  Route,
   Car,
   SlidersHorizontal,
 } from "lucide-react";
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  Zap,
-  Calculator,
-  BatteryCharging,
-  Route,
-};
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -89,8 +80,7 @@ export function AppSidebar() {
                   {categoryTools.map((tool) => {
                     const href = `/tools/${tool.id}`;
                     const isActive = pathname === href;
-                    const Icon = ICON_MAP[tool.iconName] || Zap;
-                    const isImplemented = tool.implemented;
+                    const isImplemented = tool.implemented !== false;
 
                     if (!isImplemented) {
                       return (
@@ -100,7 +90,7 @@ export function AppSidebar() {
                             tooltip={`${tool.name} (Coming Soon)`}
                             className="opacity-50 cursor-not-allowed text-muted-foreground select-none hover:bg-transparent"
                           >
-                            <Icon className="size-4 opacity-70" />
+                            <DynamicIcon name={tool.iconName as IconName} className="size-4 opacity-70" />
                             <span className="truncate">{tool.name}</span>
                             <Badge variant="outline" className="ml-auto text-[9px] px-1 py-0 h-3.5 text-muted-foreground border-muted-foreground/30 font-normal group-data-[collapsible=icon]:hidden">
                               Soon
@@ -113,7 +103,7 @@ export function AppSidebar() {
                     return (
                       <SidebarMenuItem key={tool.id}>
                         <SidebarMenuButton render={<Link href={href} />} isActive={isActive} tooltip={tool.name}>
-                          <Icon className="size-4" />
+                          <DynamicIcon name={tool.iconName as IconName} className="size-4" />
                           <span className="truncate">{tool.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

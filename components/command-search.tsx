@@ -13,14 +13,7 @@ import {
 import { getAllTools } from "@/lib/tools/registry";
 import { ToolCategory } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Calculator, BatteryCharging, Route, Search } from "lucide-react";
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  Zap,
-  Calculator,
-  BatteryCharging,
-  Route,
-};
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 
 interface CommandSearchProps {
   open: boolean;
@@ -54,8 +47,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
           return (
             <CommandGroup key={category} heading={category}>
               {categoryTools.map((tool) => {
-                const IconComponent = ICON_MAP[tool.iconName] || Search;
-                const isImplemented = tool.implemented;
+                const isImplemented = tool.implemented !== false;
 
                 return (
                   <CommandItem
@@ -74,7 +66,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                         isImplemented ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      <IconComponent className="size-4" />
+                      <DynamicIcon name={tool.iconName as IconName} className="size-4" />
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <div className="flex items-center gap-2">

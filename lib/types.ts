@@ -14,7 +14,7 @@ export interface Tool {
   iconName: IconName | string; // Lucide icon name from lucide-react/dynamic
   keywords: string[];
   featured?: boolean;
-  implemented: boolean;
+  implemented?: boolean;
 }
 
 export type DistanceUnit = "km" | "mi";

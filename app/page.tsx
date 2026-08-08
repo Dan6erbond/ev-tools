@@ -22,14 +22,8 @@ import {
   CheckCircle2,
   Lock,
 } from "lucide-react";
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 import { formatEfficiency } from "@/lib/units";
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  Zap,
-  Calculator,
-  BatteryCharging,
-  Route,
-};
 
 export default function HomePage() {
   const tools = getAllTools();
@@ -149,8 +143,7 @@ export default function HomePage() {
       {/* Tools Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTools.map((tool) => {
-          const IconComponent = ICON_MAP[tool.iconName] || Zap;
-          const isImplemented = tool.implemented;
+          const isImplemented = tool.implemented !== false;
 
           return (
             <Card
@@ -170,7 +163,7 @@ export default function HomePage() {
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    <IconComponent className="size-5" />
+                    <DynamicIcon name={tool.iconName as IconName} className="size-5" />
                   </div>
                   <div className="flex items-center gap-1.5">
                     {!isImplemented && (

@@ -28,6 +28,12 @@ Whether you're deciding if driving out of your way to a cheaper DC fast charger 
   - Dual-thumb range slider for target battery charge range (% SOC to % SOC).
   - Synchronized via URL query parameters (`nuqs`) for instant sharing & bookmarking.
 
+- **🧾 Charger Activation Fee Break-Even Calculator**:
+  - Compare a standard per-kWh charger against a cheaper charger with an activation or session fee.
+  - Computes exact energy volume (kWh and battery SoC %) required to break even.
+  - Visual breakdown matrix comparing costs across charging volumes (10 kWh to 100 kWh).
+  - Synchronized via URL query parameters (`nuqs`) and `localStorage`.
+
 - **🚗 Vehicle Garage & Profile Management**:
   - Save custom EV profiles or choose from pre-configured presets (*Tesla Model Y/3, BMW i4, Hyundai Ioniq 5, Porsche Taycan, EV6, Mustang Mach-E*).
   - Set custom usable battery size (kWh) and rated efficiency.
