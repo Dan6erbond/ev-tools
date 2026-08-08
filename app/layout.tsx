@@ -41,7 +41,7 @@ export default function RootLayout({
             <TooltipProvider>
               <SidebarProvider>
                 <AppSidebar />
-                <SidebarInset className="flex flex-col min-h-screen">
+                <SidebarInset className="flex flex-col min-h-svh peer-data-[variant=inset]:min-h-[calc(100svh-1rem)]">
                   <AppHeader />
                   <main className="flex-1 bg-background">{children}</main>
                   <footer className="border-t py-6 text-center text-xs text-muted-foreground">
@@ -62,3 +62,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+
