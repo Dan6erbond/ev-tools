@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import { useSettings } from "@/components/settings-context";
+import { ActiveVehicleBanner } from "@/components/blocks/active-vehicle-banner";
+import { ChargeTargetCard } from "@/components/blocks/charge-target-card";
 import { formatCurrency } from "@/lib/units";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
   Receipt,
@@ -214,7 +214,7 @@ export function FeeBreakEvenCalculator() {
   }
 
   // Generate 100 data points (1% to 100% SoC) for effective price reduction chart
-  const chartData = React.useMemo(() => {
+  const chartData = useMemo(() => {
     const rawKwhs = new Set<number>();
     
     // 100 points for 1%..100% battery SoC
@@ -272,50 +272,32 @@ export function FeeBreakEvenCalculator() {
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto">
       {/* Active Vehicle Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border bg-muted/40 backdrop-blur-xs">
-        {activeVehicle ? (
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <Car className="size-5" />
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Active Vehicle</div>
-              <div className="text-sm font-bold flex items-center gap-2">
-                {activeVehicle.name}
-                <Badge variant="secondary" className="text-[10px] font-mono">
-                  {batteryKwh} kWh Battery
-                </Badge>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 text-muted-foreground text-xs">
-            <Car className="size-4" />
-            <span>Using default 75.0 kWh battery. Set your car in Profile for exact SoC % calculations.</span>
-          </div>
-        )}
-
-        {/* Preset Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground hidden sm:inline">Presets:</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => applyPreset("activationFee")}
-            className="text-xs h-7 px-2.5"
-          >
-            2.00 Fee vs 0.04 Rate
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => applyPreset("subscription")}
-            className="text-xs h-7 px-2.5"
-          >
-            5.00 Pass vs 0.20 Rate
-          </Button>
-        </div>
-      </div>
+      <ActiveVehicleBanner
+        activeVehicle={activeVehicle}
+        batteryKwh={batteryKwh}
+        showEfficiency={false}
+        actions={
+          <>
+            <span className="text-xs text-muted-foreground hidden sm:inline">Presets:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyPreset("activationFee")}
+              className="text-xs h-7 px-2.5"
+            >
+              2.00 Fee vs 0.04 Rate
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyPreset("subscription")}
+              className="text-xs h-7 px-2.5"
+            >
+              5.00 Pass vs 0.20 Rate
+            </Button>
+          </>
+        }
+      />
 
       {/* Hero Result Banner */}
       <Card className="border-2 shadow-sm overflow-hidden bg-card">
@@ -730,118 +712,33 @@ export function FeeBreakEvenCalculator() {
       </div>
 
       {/* Target Charge Session Configuration */}
-      <Card className="border shadow-xs">
-        <CardHeader className="pb-3 border-b bg-muted/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base font-bold">Charge Session Target</CardTitle>
-              <CardDescription className="text-xs">
-                Set how much energy you plan to charge to compare total costs.
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="font-mono text-xs">
-              {activeChargeKwh.toFixed(1)} kWh
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <Tabs
-            value={chargeMode}
-            onValueChange={(val) => setState({ chargeMode: val })}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-4 mb-6">
-              <TabsTrigger value="kwh" className="text-xs">
-                Target kWh
-              </TabsTrigger>
-              <TabsTrigger value="socRange" className="text-xs">
-                SoC % Range
-              </TabsTrigger>
-              <TabsTrigger value="addedPct" className="text-xs">
-                Added %
-              </TabsTrigger>
-              <TabsTrigger value="breakeven" className="text-xs">
-                Break-Even Point
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="kwh" className="flex flex-col gap-4">
+      <ChargeTargetCard
+        title="Charge Session Target"
+        description="Set how much energy you plan to charge to compare total costs."
+        chargeMode={chargeMode}
+        targetKwh={targetKwh}
+        targetAddedPct={targetAddedPct}
+        socStart={socStart}
+        socEnd={socEnd}
+        batteryKwh={batteryKwh}
+        vehicleName={activeVehicle?.name || "EV"}
+        maxKwh={120}
+        onStateChange={(updates) => setState(updates)}
+        breakEvenContent={
+          <div className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/40">
+            {isFinite(breakEvenKwh) && breakEvenKwh > 0 ? (
               <div className="flex items-center justify-between">
-                <Label htmlFor="targetKwh" className="text-xs font-semibold">
-                  Energy Amount: <span className="font-mono text-primary font-bold">{targetKwh} kWh</span>
-                </Label>
-                <span className="text-xs text-muted-foreground font-mono">
-                  ~{((targetKwh / batteryKwh) * 100).toFixed(0)}% battery
+                <span>Evaluating exactly at Break-Even threshold ({breakEvenKwh.toFixed(1)} kWh):</span>
+                <span className="font-mono font-bold text-foreground">
+                  Both chargers cost {formatCurrency(costA, settings.currency)}
                 </span>
               </div>
-              <Slider
-                id="targetKwh"
-                min={5}
-                max={120}
-                step={1}
-                value={[targetKwh]}
-                onValueChange={(val) => setState({ targetKwh: Array.isArray(val) ? val[0] : val })}
-                className="w-full"
-              />
-            </TabsContent>
-
-            <TabsContent value="socRange" className="flex flex-col gap-4">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold">
-                  State of Charge: <span className="text-primary font-bold">{socStart}% → {socEnd}%</span>
-                </span>
-                <span className="text-muted-foreground font-mono">
-                  Added: {socEnd - socStart}% ({activeChargeKwh.toFixed(1)} kWh)
-                </span>
-              </div>
-              <Slider
-                min={0}
-                max={100}
-                step={5}
-                value={[socStart, socEnd]}
-                onValueChange={(val) => {
-                  if (Array.isArray(val) && val.length === 2 && val[1] > val[0]) {
-                    setState({ socStart: val[0], socEnd: val[1] });
-                  }
-                }}
-                className="w-full"
-              />
-            </TabsContent>
-
-            <TabsContent value="addedPct" className="flex flex-col gap-4">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold">
-                  Added Battery %: <span className="text-primary font-bold">+{targetAddedPct}%</span>
-                </span>
-                <span className="text-muted-foreground font-mono">
-                  {activeChargeKwh.toFixed(1)} kWh
-                </span>
-              </div>
-              <Slider
-                min={5}
-                max={100}
-                step={5}
-                value={[targetAddedPct]}
-                onValueChange={(val) => setState({ targetAddedPct: Array.isArray(val) ? val[0] : val })}
-                className="w-full"
-              />
-            </TabsContent>
-
-            <TabsContent value="breakeven" className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/40">
-              {isFinite(breakEvenKwh) && breakEvenKwh > 0 ? (
-                <div className="flex items-center justify-between">
-                  <span>Evaluating exactly at Break-Even threshold ({breakEvenKwh.toFixed(1)} kWh):</span>
-                  <span className="font-mono font-bold text-foreground">
-                    Both chargers cost {formatCurrency(costA, settings.currency)}
-                  </span>
-                </div>
-              ) : (
-                <span>No positive break-even threshold found for current rates.</span>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            ) : (
+              <span>No positive break-even threshold found for current rates.</span>
+            )}
+          </div>
+        }
+      />
 
       {/* Cost Comparison Table / Matrix */}
       <Card className="border shadow-xs">

@@ -1,35 +1,26 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useQueryStates, parseAsString, parseAsBoolean, parseAsInteger } from "nuqs";
 import { useSettings } from "@/components/settings-context";
+import { ActiveVehicleBanner } from "@/components/blocks/active-vehicle-banner";
+import { ChargeTargetCard } from "@/components/blocks/charge-target-card";
 import {
   formatCurrency,
   formatDistance,
   distanceToKm,
   efficiencyToKwhPerKm,
-  convertEfficiency,
-  formatEfficiency,
 } from "@/lib/units";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
-  Zap,
-  Car,
-  TrendingDown,
-  TrendingUp,
   AlertTriangle,
   CheckCircle2,
   Navigation,
-  Compass,
-  ArrowRight,
   Sparkles,
 } from "lucide-react";
 
@@ -146,41 +137,7 @@ export function DetourCalculator() {
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto">
       {/* Active Vehicle Bar Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border bg-muted/40 backdrop-blur-xs">
-        {activeVehicle ? (
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <Car className="size-5" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm">{activeVehicle.name}</span>
-                <Badge variant="outline" className="text-[10px] py-0 border-emerald-500/30 text-emerald-600">
-                  Active EV
-                </Badge>
-              </div>
-              <span className="text-xs text-muted-foreground font-mono">
-                {batteryKwh} kWh Usable Battery · {formatEfficiency(convertEfficiency(activeVehicle.efficiencyValue, activeVehicle.efficiencyUnit, settings.efficiencyUnit), settings.efficiencyUnit)}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <Car className="size-5 text-muted-foreground" />
-              <div className="flex flex-col">
-                <span className="font-semibold text-sm">No Active Vehicle Selected</span>
-                <span className="text-xs text-muted-foreground font-mono">
-                  Using default specs: 75.0 kWh Usable Battery · {formatEfficiency(18.0, settings.efficiencyUnit)}
-                </span>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" render={<a href="/profile" />} className="h-7 text-xs">
-              Add EV to Garage
-            </Button>
-          </div>
-        )}
-      </div>
+      <ActiveVehicleBanner activeVehicle={activeVehicle} batteryKwh={batteryKwh} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column (5 cols): Station & Trip Inputs */}
@@ -276,94 +233,23 @@ export function DetourCalculator() {
           </Card>
 
           {/* Charging Goal Selection */}
-          <Card className="shadow-xs">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Zap className="size-4 text-primary" />
-                Charging Goal / Amount
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <Tabs value={chargeMode} onValueChange={(val) => setState({ chargeMode: val })} className="w-full">
-                <TabsList className="grid grid-cols-4 w-full">
-                  <TabsTrigger value="kwh" className="text-xs">kWh</TabsTrigger>
-                  <TabsTrigger value="addedPct" className="text-xs">+%</TabsTrigger>
-                  <TabsTrigger value="socRange" className="text-xs">% Range</TabsTrigger>
-                  <TabsTrigger value="breakeven" className="text-xs">Break-Even</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="kwh" className="flex flex-col gap-3 pt-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Target Charge:</span>
-                    <span className="font-mono font-bold text-base">{targetKwh} kWh</span>
-                  </div>
-                  <Slider
-                    value={[targetKwh]}
-                    onValueChange={(val) => setState({ targetKwh: Array.isArray(val) ? val[0] : val })}
-                    min={5}
-                    max={batteryKwh}
-                    step={1}
-                  />
-                  <span className="text-[11px] text-muted-foreground text-right">
-                    ~{((targetKwh / batteryKwh) * 100).toFixed(0)}% of {activeVehicle?.name || "EV"} battery
-                  </span>
-                </TabsContent>
-
-                <TabsContent value="addedPct" className="flex flex-col gap-3 pt-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Add Battery %:</span>
-                    <span className="font-mono font-bold text-base">+{targetAddedPct}%</span>
-                  </div>
-                  <Slider
-                    value={[targetAddedPct]}
-                    onValueChange={(val) => setState({ targetAddedPct: Array.isArray(val) ? val[0] : val })}
-                    min={5}
-                    max={100}
-                    step={5}
-                  />
-                  <span className="text-[11px] text-muted-foreground text-right">
-                    = {((targetAddedPct / 100) * batteryKwh).toFixed(1)} kWh
-                  </span>
-                </TabsContent>
-
-                <TabsContent value="socRange" className="flex flex-col gap-4 pt-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">SoC Charge Range:</span>
-                    <span className="font-mono font-bold text-base">{socStart}% → {socEnd}%</span>
-                  </div>
-                  
-                  {/* Range Slider for % Range */}
-                  <Slider
-                    value={[socStart, socEnd]}
-                    onValueChange={(val) => {
-                      if (Array.isArray(val) && val.length === 2) {
-                        setState({ socStart: val[0], socEnd: val[1] });
-                      }
-                    }}
-                    min={0}
-                    max={100}
-                    step={5}
-                    className="mx-auto w-full max-w-xs"
-                  />
-                  
-                  <div className="flex justify-between text-xs text-muted-foreground px-1 font-mono">
-                    <span>Start: {socStart}%</span>
-                    <span>Target: {socEnd}%</span>
-                  </div>
-
-                  <span className="text-[11px] text-muted-foreground text-right">
-                    Delivers {(((socEnd - socStart) / 100) * batteryKwh).toFixed(1)} kWh
-                  </span>
-                </TabsContent>
-
-                <TabsContent value="breakeven" className="pt-3">
-                  <p className="text-xs text-muted-foreground">
-                    Calculates the minimum energy you must charge at the detour station to break even after paying for extra driving energy.
-                  </p>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+          <ChargeTargetCard
+            title="Charging Goal / Amount"
+            chargeMode={chargeMode}
+            targetKwh={targetKwh}
+            targetAddedPct={targetAddedPct}
+            socStart={socStart}
+            socEnd={socEnd}
+            batteryKwh={batteryKwh}
+            vehicleName={activeVehicle?.name || "EV"}
+            maxKwh={batteryKwh}
+            onStateChange={(updates) => setState(updates)}
+            breakEvenContent={
+              <p className="text-xs text-muted-foreground">
+                Calculates the minimum energy you must charge at the detour station to break even after paying for extra driving energy.
+              </p>
+            }
+          />
         </div>
 
         {/* Right Column (7 cols): Visual Results & Breakdown */}
